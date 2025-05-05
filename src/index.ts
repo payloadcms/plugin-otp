@@ -8,7 +8,7 @@ export type TemplateConfig = {
   disabled?: boolean
 }
 
-export const template =
+export const pluginOTP =
   (pluginOptions: TemplateConfig) =>
   (config: Config): Config => {
     if (!config.collections) {
@@ -68,11 +68,9 @@ export const template =
     }
 
     config.admin.components.beforeDashboard.push(
-      `template/client#BeforeDashboardClient`,
+      `@payloadcms/plugin-otp/client#BeforeDashboardClient`,
     )
-    config.admin.components.beforeDashboard.push(
-      `template/rsc#BeforeDashboardServer`,
-    )
+    config.admin.components.beforeDashboard.push(`@payloadcms/plugin-otp/rsc#BeforeDashboardServer`)
 
     config.endpoints.push({
       handler: () => {
