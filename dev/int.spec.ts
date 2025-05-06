@@ -1,90 +1,177 @@
-/* eslint-disable no-console */
-/**
- * Here are your integration tests for the plugin.
- * They don't require running your Next.js so they are fast
- * Yet they still can test the Local API and custom endpoints using NextRESTClient helper.
- */
-
 import type { Payload } from 'payload'
 
-import dotenv from 'dotenv'
-import { MongoMemoryReplSet } from 'mongodb-memory-server'
-import path from 'path'
-import { getPayload } from 'payload'
-import { fileURLToPath } from 'url'
+import config from '@payload-config'
+import { createLocalReq, createPayloadRequest, getPayload } from 'payload'
+import { wait } from 'payload/shared'
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 
-import { NextRESTClient } from './helpers/NextRESTClient.js'
+import type { User } from './payload-types.js'
 
-const dirname = path.dirname(fileURLToPath(import.meta.url))
+import { getLoginHandler } from '../src/endpoints/login.js'
+import { getOTPHandler } from '../src/endpoints/otp.js'
+import { loginWithOTP } from '../src/operations/login.js'
+import { setOTP } from '../src/operations/setOTP.js'
+import { devUser } from './helpers/credentials.js'
 
 let payload: Payload
-let restClient: NextRESTClient
-let memoryDB: MongoMemoryReplSet | undefined
 
-describe('Plugin tests', () => {
-  beforeAll(async () => {
-    process.env.DISABLE_PAYLOAD_HMR = 'true'
-    process.env.PAYLOAD_DROP_DATABASE = 'true'
+afterAll(async () => {
+  if (payload.db.destroy) {
+    await payload.db.destroy()
+  }
+})
 
-    dotenv.config({
-      path: path.resolve(dirname, './.env'),
+beforeAll(async () => {
+  payload = await getPayload({ config })
+})
+
+describe('REST', () => {
+  const otpHandler = getOTPHandler({ collection: 'users' })
+  const loginHandler = getLoginHandler({ collection: 'users' })
+
+  test('reject OTP login if bad OTP', async () => {
+    const request = new Request('http://localhost:3000/api/users/otp/login', {
+      body: JSON.stringify({
+        type: 'email',
+        otp: '123456',
+        value: devUser.email,
+      }),
+      headers: new Headers({
+        'Content-Type': 'application/json',
+      }),
+      method: 'POST',
     })
 
-    if (!process.env.DATABASE_URI) {
-      console.log('Starting memory database')
-      memoryDB = await MongoMemoryReplSet.create({
-        replSet: {
-          count: 3,
-          dbName: 'payloadmemory',
+    const payloadRequest = await createPayloadRequest({ config, request })
+
+    await expect(loginHandler(payloadRequest)).rejects.toThrowError(
+      'The email or one-time password is incorrect.',
+    )
+  })
+
+  test('requests and logs in with email + OTP', async () => {
+    const request1 = new Request('http://localhost:3000/api/users/otp/send', {
+      body: JSON.stringify({
+        type: 'email',
+        value: devUser.email,
+      }),
+      headers: new Headers({
+        'Content-Type': 'application/json',
+      }),
+      method: 'POST',
+    })
+
+    const payloadRequest1 = await createPayloadRequest({ config, request: request1 })
+    const { payload } = payloadRequest1
+
+    const logSpy = vi.spyOn(payload.email, 'sendEmail').mockImplementation(async () => {})
+
+    await otpHandler(payloadRequest1)
+
+    const userFromDB = await payload.db.findOne<User>({
+      collection: 'users',
+      where: {
+        email: {
+          equals: devUser.email,
         },
-      })
-      console.log('Memory database started')
-
-      process.env.DATABASE_URI = `${memoryDB.getUri()}&retryWrites=true`
-    }
-
-    const { default: config } = await import('./payload.config.js')
-
-    payload = await getPayload({ config })
-    restClient = new NextRESTClient(payload.config)
-  })
-
-  afterAll(async () => {
-    if (payload.db.destroy) {
-      await payload.db.destroy()
-    }
-
-    if (memoryDB) {
-      await memoryDB.stop()
-    }
-  })
-
-  it('should query added by plugin custom endpoint', async () => {
-    const response = await restClient.GET('/my-plugin-endpoint')
-    expect(response.status).toBe(200)
-
-    const data = await response.json()
-    expect(data).toMatchObject({
-      message: 'Hello from custom endpoint',
-    })
-  })
-
-  it('can create post with a custom text field added by plugin', async () => {
-    const post = await payload.create({
-      collection: 'posts',
-      data: {
-        addedByPlugin: 'added by plugin',
       },
     })
 
-    expect(post.addedByPlugin).toBe('added by plugin')
+    if (!userFromDB) {
+      throw new Error('cant find dev user')
+    }
+
+    expect(userFromDB._otp).toBeTypeOf('string')
+    expect(userFromDB._otpExpiration).toBeTypeOf('string')
+
+    const calls = logSpy.mock.calls
+    const otp = calls[0][0].html.match(/\d{6}/)[0]
+
+    expect(otp).toBeTypeOf('string')
+
+    const request2 = new Request('http://localhost:3000/api/users/otp/login', {
+      body: JSON.stringify({
+        type: 'email',
+        otp,
+        value: devUser.email,
+      }),
+      headers: new Headers({
+        'Content-Type': 'application/json',
+      }),
+      method: 'POST',
+    })
+
+    const payloadRequest = await createPayloadRequest({ config, request: request2 })
+    const res = await loginHandler(payloadRequest)
+
+    const setCookieHeader = res.headers.get('Set-Cookie')
+
+    expect(setCookieHeader?.startsWith('payload-token')).toBeTruthy()
+    expect(res.status).toBe(200)
+  })
+})
+
+describe('local operations', () => {
+  test('reject OTP login if bad OTP', async () => {
+    const req = await createLocalReq({}, payload)
+
+    await expect(
+      loginWithOTP({
+        type: 'email',
+        collection: 'users',
+        otp: 'bad',
+        req,
+        value: devUser.email,
+      }),
+    ).rejects.toThrowError('The email or one-time password is incorrect.')
   })
 
-  it('plugin creates and seeds plugin-collection', async () => {
-    expect(payload.collections['plugin-collection']).toBeDefined()
+  test('rejects expired otp', async () => {
+    const req = await createLocalReq({}, payload)
 
-    const { docs } = await payload.find({ collection: 'plugin-collection' })
+    const { otp } = await setOTP({
+      type: 'email',
+      collection: 'users',
+      // Override exp to 1 sec
+      exp: 1,
+      payload,
+      value: devUser.email,
+    })
 
-    expect(docs).toHaveLength(1)
+    await wait(1000)
+
+    await expect(
+      loginWithOTP({
+        type: 'email',
+        collection: 'users',
+        otp,
+        req,
+        value: devUser.email,
+      }),
+    ).rejects.toThrowError('The email or one-time password is incorrect.')
+  })
+
+  test('requests and logs in with email + OTP', async () => {
+    const req = await createLocalReq({}, payload)
+
+    const { otp } = await setOTP({
+      type: 'email',
+      collection: 'users',
+      payload,
+      value: devUser.email,
+    })
+
+    expect(otp).toBeTypeOf('string')
+
+    const result = await loginWithOTP({
+      type: 'email',
+      collection: 'users',
+      otp,
+      req,
+      value: devUser.email,
+    })
+
+    expect(result.token).toBeTypeOf('string')
+    expect(result.user.email).toStrictEqual(devUser.email)
   })
 })

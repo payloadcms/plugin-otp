@@ -1,1 +1,1 @@
-export { BeforeDashboardServer } from '../components/BeforeDashboardServer.js'
+export { AfterLoginOTP } from '../components/AfterLogin/index.js'
