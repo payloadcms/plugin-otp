@@ -8,9 +8,9 @@ import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 import type { User } from './payload-types.js'
 
 import { getLoginHandler } from '../src/endpoints/login.js'
-import { getOTPHandler } from '../src/endpoints/otp.js'
+import { getRequestOTPHandler } from '../src/endpoints/request.js'
 import { loginWithOTP } from '../src/operations/login.js'
-import { setOTP } from '../src/operations/setOTP.js'
+import { setOTP } from '../src/operations/requestOTP.js'
 import { devUser } from './helpers/credentials.js'
 
 let payload: Payload
@@ -26,7 +26,7 @@ beforeAll(async () => {
 })
 
 describe('REST', () => {
-  const otpHandler = getOTPHandler({ collection: 'users' })
+  const requestOTPHandler = getRequestOTPHandler({ collection: 'users' })
   const loginHandler = getLoginHandler({ collection: 'users' })
 
   test('reject OTP login if bad OTP', async () => {
@@ -50,7 +50,7 @@ describe('REST', () => {
   })
 
   test('requests and logs in with email + OTP', async () => {
-    const request1 = new Request('http://localhost:3000/api/users/otp/send', {
+    const request1 = new Request('http://localhost:3000/api/users/otp/request', {
       body: JSON.stringify({
         type: 'email',
         value: devUser.email,
@@ -66,7 +66,7 @@ describe('REST', () => {
 
     const logSpy = vi.spyOn(payload.email, 'sendEmail').mockImplementation(async () => {})
 
-    await otpHandler(payloadRequest1)
+    await requestOTPHandler(payloadRequest1)
 
     const userFromDB = await payload.db.findOne<User>({
       collection: 'users',

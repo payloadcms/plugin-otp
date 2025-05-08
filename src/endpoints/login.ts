@@ -1,6 +1,6 @@
 import type { PayloadHandler } from 'payload'
 
-import { generatePayloadCookie } from 'payload'
+import { addDataAndFileToRequest, generatePayloadCookie } from 'payload'
 
 import { loginWithOTP } from '../operations/login.js'
 
@@ -13,16 +13,15 @@ export const getLoginHandler =
   async (req) => {
     const collectionConfig = req.payload.collections[collection].config
 
-    if (typeof req.json !== 'function') {
-      return Response.json(
-        { message: 'Request must be of Content-Type: application/json' },
-        { status: 400 },
-      )
-    }
+    await addDataAndFileToRequest(req)
 
-    const body = await req.json()
-
-    const { exp, token, user } = await loginWithOTP({ ...body, collection, req })
+    const { exp, token, user } = await loginWithOTP({
+      type: req.data?.type,
+      collection,
+      otp: req.data?.otp,
+      req,
+      value: req.data?.value,
+    })
 
     const cookie = generatePayloadCookie({
       collectionAuthConfig: collectionConfig.auth,

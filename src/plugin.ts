@@ -6,7 +6,7 @@ import type { OTPPluginOptions } from './types.js'
 
 import { defaultUserCollection } from './defaults.js'
 import { getLoginHandler } from './endpoints/login.js'
-import { getOTPHandler } from './endpoints/otp.js'
+import { getRequestOTPHandler } from './endpoints/request.js'
 
 export const pluginOTP =
   (options: OTPPluginOptions): Plugin =>
@@ -19,14 +19,36 @@ export const pluginOTP =
     if (!config.admin) {
       config.admin = {}
     }
-    if (!config.admin?.components) {
+    if (!config.admin.components) {
       config.admin.components = {}
     }
-    if (!config.admin?.components.afterLogin) {
+    if (!config.admin.components.afterLogin) {
       config.admin.components.afterLogin = []
     }
 
-    config.admin.components.afterLogin.push('@payloadcms/plugin-otp/rsc#AfterLoginOTP')
+    if (!config.admin.components.views) {
+      config.admin.components.views = {}
+    }
+
+    config.admin.components.afterLogin.push('@payloadcms/plugin-otp/client#AfterLoginOTP')
+
+    config.admin.components.views.requestOTP = {
+      Component: '@payloadcms/plugin-otp/client#RequestOTP',
+      exact: true,
+      meta: {
+        titleSuffix: ' - Request one-time password',
+      },
+      path: '/otp/request',
+    }
+
+    config.admin.components.views.loginOTP = {
+      Component: '@payloadcms/plugin-otp/client#LoginOTP',
+      exact: true,
+      meta: {
+        titleSuffix: ' - Login with one-time password',
+      },
+      path: '/otp/login',
+    }
 
     Object.keys(options.collections).forEach((collectionSlug) => {
       let matchedCollection = config.collections?.find(({ slug }) => slug === collectionSlug)
@@ -61,9 +83,9 @@ export const pluginOTP =
       }
 
       matchedCollection.endpoints.push({
-        handler: getOTPHandler({ collection: collectionSlug }),
+        handler: getRequestOTPHandler({ collection: collectionSlug }),
         method: 'post',
-        path: '/otp/send',
+        path: '/otp/request',
       })
 
       matchedCollection.endpoints.push({

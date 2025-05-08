@@ -7,7 +7,6 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
-import { devUser } from './helpers/credentials.js'
 import { testEmailAdapter } from './helpers/testEmailAdapter.js'
 import { seed } from './seed.js'
 
@@ -32,24 +31,11 @@ const buildConfigWithMemoryDB = async () => {
 
   return buildConfig({
     admin: {
-      autoLogin: devUser,
       importMap: {
         baseDir: path.resolve(dirname),
       },
     },
-    collections: [
-      {
-        slug: 'posts',
-        fields: [],
-      },
-      {
-        slug: 'media',
-        fields: [],
-        upload: {
-          staticDir: path.resolve(dirname, 'media'),
-        },
-      },
-    ],
+    collections: [],
     db: mongooseAdapter({
       ensureIndexes: true,
       url: process.env.DATABASE_URI || '',

@@ -24,6 +24,14 @@ export const setOTP = async ({
   payload,
   value,
 }: Args): Promise<{ otp: string; user: DataFromCollectionSlug<AuthCollectionSlug> }> => {
+  if (!type) {
+    throw new APIError('No login type specified', 400)
+  }
+
+  if (!value) {
+    throw new APIError(`No ${type} provided`, 400)
+  }
+
   const otp = generateOTP()
   const user = await findUser({ type, collection, payload, value })
 
