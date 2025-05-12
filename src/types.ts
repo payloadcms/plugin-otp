@@ -34,6 +34,15 @@ export type OTPPluginCollectionOptions = {
 }
 
 export type OTPPluginOptions = {
+  /**
+   * Set `admin: false` to disable any modifications to the Payload admin UI.
+   * This is useful if you are using this plugin in your own frontends, but not
+   * within the admin UI itself.
+   */
+  admin?: false
+  /**
+   * Define options for each auth-enabled collection you want to enable OTP for.
+   */
   collections: Partial<{
     [K in AuthCollectionSlug]: OTPPluginCollectionOptions | true
   }>
@@ -80,9 +89,3 @@ export type FindUserType =
   | { type: 'email'; value: string }
   | { type: 'id'; value: number | string }
   | { type: 'username'; value: string }
-
-export type OTPPluginConfig = {
-  collections: {
-    [slug: string]: OTPPluginCollectionOptions
-  }
-}

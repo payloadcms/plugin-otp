@@ -16,38 +16,40 @@ export const pluginOTP =
       otp: options,
     }
 
-    if (!config.admin) {
-      config.admin = {}
-    }
-    if (!config.admin.components) {
-      config.admin.components = {}
-    }
-    if (!config.admin.components.afterLogin) {
-      config.admin.components.afterLogin = []
-    }
+    if (options.admin !== false) {
+      if (!config.admin) {
+        config.admin = {}
+      }
+      if (!config.admin.components) {
+        config.admin.components = {}
+      }
+      if (!config.admin.components.afterLogin) {
+        config.admin.components.afterLogin = []
+      }
 
-    if (!config.admin.components.views) {
-      config.admin.components.views = {}
-    }
+      if (!config.admin.components.views) {
+        config.admin.components.views = {}
+      }
 
-    config.admin.components.afterLogin.push('@payloadcms/plugin-otp/client#AfterLoginOTP')
+      config.admin.components.afterLogin.push('@payloadcms/plugin-otp/client#AfterLoginOTP')
 
-    config.admin.components.views.requestOTP = {
-      Component: '@payloadcms/plugin-otp/client#RequestOTP',
-      exact: true,
-      meta: {
-        titleSuffix: ' - Request one-time password',
-      },
-      path: '/otp/request',
-    }
+      config.admin.components.views.requestOTP = {
+        Component: '@payloadcms/plugin-otp/client#RequestOTP',
+        exact: true,
+        meta: {
+          titleSuffix: ' - Request one-time password',
+        },
+        path: '/otp/request',
+      }
 
-    config.admin.components.views.loginOTP = {
-      Component: '@payloadcms/plugin-otp/client#LoginOTP',
-      exact: true,
-      meta: {
-        titleSuffix: ' - Login with one-time password',
-      },
-      path: '/otp/login',
+      config.admin.components.views.loginOTP = {
+        Component: '@payloadcms/plugin-otp/client#LoginOTP',
+        exact: true,
+        meta: {
+          titleSuffix: ' - Login with one-time password',
+        },
+        path: '/otp/login',
+      }
     }
 
     Object.keys(options.collections).forEach((collectionSlug) => {
