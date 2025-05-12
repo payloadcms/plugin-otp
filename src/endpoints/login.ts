@@ -31,6 +31,7 @@ export const getLoginHandler =
 
     const result: Record<string, unknown> = {
       exp,
+      message: 'Successfully logged in with one-time password.',
       user,
     }
 

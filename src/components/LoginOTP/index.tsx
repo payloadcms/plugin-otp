@@ -18,7 +18,7 @@ import React from 'react'
 
 import { localStorageKey } from '../shared.js'
 
-const baseClass = 'request-otp'
+const baseClass = 'login-otp'
 
 export const LoginOTP: React.FC<AdminViewClientProps> = () => {
   const { config, getEntityConfig } = useConfig()
@@ -68,7 +68,6 @@ export const LoginOTP: React.FC<AdminViewClientProps> = () => {
       <Form
         action={`${api}/${userSlug}/otp/login`}
         className={baseClass}
-        disableSuccessStatus
         initialState={initialState}
         method="POST"
         onSuccess={handleRedirect}

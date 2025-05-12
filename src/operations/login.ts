@@ -1,12 +1,12 @@
 import type { PayloadRequest, TypedUser } from 'payload'
 
 import {
-  APIError,
   checkLoginPermission,
   getFieldsToSign,
   getLoginOptions,
   incrementLoginAttempts,
   jwtSign,
+  ValidationError,
 } from 'payload'
 
 import type { AuthCollectionSlug, FindUserType } from '../types.js'
@@ -46,7 +46,15 @@ export const loginWithOTP = async ({ type, collection, otp, req, value }: Args) 
       })
     }
 
-    throw new APIError('Failed logging in with one-time password.')
+    throw new ValidationError({
+      collection: collectionConfig.slug,
+      errors: [
+        {
+          message: 'Failed logging in with one-time password.',
+          path: 'otp',
+        },
+      ],
+    })
   }
 
   let user: TypedUser = {

@@ -1,6 +1,6 @@
 import type { Payload, TypedUser, Where } from 'payload'
 
-import { APIError } from 'payload'
+import { APIError, ValidationError } from 'payload'
 
 import type { AuthCollectionSlug } from '../types.js'
 
@@ -49,7 +49,16 @@ export const findUser = async ({ type, collection, otp, payload, value }: Args) 
     const userWithMatchingOTP = matchedOTPQuery.docs[0]
 
     if (!userWithMatchingOTP || userWithMatchingOTP.id !== user.id) {
-      throw new APIError(ambiguousError, 400)
+      throw new ValidationError({
+        collection,
+        errors: [
+          {
+            label: 'One-time password',
+            message: 'Failed logging in with one-time password.',
+            path: 'otp',
+          },
+        ],
+      })
     }
 
     user = userWithMatchingOTP
