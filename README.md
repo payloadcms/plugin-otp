@@ -10,3 +10,4 @@ This repository demonstrates how to build a well-structured and advanced plugin 
 - Properly export plugin utilities in case developers want to re-use them in their own code
 - Build and publish an NPM package
 - Set up an integration test suite that ensures the plugin has great test coverage
+- Set up E2E tests that show how to test admin-specific functionality added to Payload
