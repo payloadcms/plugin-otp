@@ -20,7 +20,5 @@ export const GET = async () => {
     value: 'dev@payloadcms.com',
   })
 
-  console.log(result)
-
   return Response.json(result)
 }
