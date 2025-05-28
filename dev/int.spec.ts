@@ -45,7 +45,7 @@ describe('REST', () => {
     const payloadRequest = await createPayloadRequest({ config, request })
 
     await expect(loginHandler(payloadRequest)).rejects.toThrowError(
-      'The email or one-time password is incorrect.',
+      'The following field is invalid: One-time password',
     )
   })
 
@@ -123,7 +123,7 @@ describe('local operations', () => {
         req,
         value: devUser.email,
       }),
-    ).rejects.toThrowError('The email or one-time password is incorrect.')
+    ).rejects.toThrowError('The following field is invalid: One-time password')
   })
 
   test('rejects expired otp', async () => {
@@ -148,7 +148,7 @@ describe('local operations', () => {
         req,
         value: devUser.email,
       }),
-    ).rejects.toThrowError('The email or one-time password is incorrect.')
+    ).rejects.toThrowError('The following field is invalid: One-time password')
   })
 
   test('requests and logs in with email + OTP', async () => {
