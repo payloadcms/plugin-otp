@@ -14,10 +14,10 @@ import {
   useTranslation,
 } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation.js'
-import { getLoginOptions } from 'payload'
 import { email, username } from 'payload/shared'
 import React from 'react'
 
+import { getLoginOptions } from '../../utilities/getLoginOptions.js'
 import { localStorageKey } from '../shared.js'
 
 const baseClass = 'request-otp'

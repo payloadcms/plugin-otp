@@ -3,7 +3,6 @@ import type { PayloadRequest, TypedUser } from 'payload'
 import {
   checkLoginPermission,
   getFieldsToSign,
-  getLoginOptions,
   incrementLoginAttempts,
   jwtSign,
   ValidationError,
@@ -13,6 +12,7 @@ import type { AuthCollectionSlug, FindUserType } from '../types.js'
 
 import { encrypt } from '../utilities/encrypt.js'
 import { findUser } from '../utilities/findUser.js'
+import { getLoginOptions } from '../utilities/getLoginOptions.js'
 
 type BaseArgs = {
   collection: AuthCollectionSlug

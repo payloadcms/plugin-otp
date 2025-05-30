@@ -13,9 +13,9 @@ import {
   useTranslation,
 } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation.js'
-import { getLoginOptions } from 'payload'
 import React from 'react'
 
+import { getLoginOptions } from '../../utilities/getLoginOptions.js'
 import { localStorageKey } from '../shared.js'
 
 const baseClass = 'login-otp'
