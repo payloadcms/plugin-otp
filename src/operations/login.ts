@@ -86,7 +86,7 @@ export const loginWithOTP = async ({ type, collection, otp, req, value }: Args) 
   req.user = user
 
   const { exp, token } = await jwtSign({
-    fieldsToSign: getFieldsToSign({ collectionConfig, email: user.emai || '', user }),
+    fieldsToSign: getFieldsToSign({ collectionConfig, email: user.email || '', user }),
     secret: payload.secret,
     tokenExpiration: collectionConfig.auth.tokenExpiration,
   })
