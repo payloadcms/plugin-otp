@@ -12,7 +12,7 @@ import {
   useConfig,
   useTranslation,
 } from '@payloadcms/ui'
-import { useRouter } from 'next/navigation.js'
+import { useRouter, useSearchParams } from 'next/navigation.js'
 import React from 'react'
 
 import { getLoginOptions } from '../../utilities/getLoginOptions.js'
@@ -21,6 +21,7 @@ import { localStorageKey } from '../shared.js'
 const baseClass = 'login-otp'
 
 export const LoginOTP: React.FC<AdminViewClientProps> = () => {
+  const redirect = useSearchParams().get('redirect')
   const { config, getEntityConfig } = useConfig()
   const { t } = useTranslation()
   const router = useRouter()
@@ -57,9 +58,9 @@ export const LoginOTP: React.FC<AdminViewClientProps> = () => {
   })
 
   const handleRedirect = React.useCallback(() => {
-    router.push(admin)
+    router.push(redirect ?? admin)
     window.localStorage.removeItem(localStorageKey)
-  }, [router, admin])
+  }, [router, admin, redirect])
 
   return (
     <MinimalTemplate>
