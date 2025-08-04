@@ -1,6 +1,8 @@
-import type { PayloadRequest, TypedUser } from 'payload'
+import type { Payload, PayloadRequest, SanitizedCollectionConfig, TypedUser } from 'payload'
 
+import { randomUUID } from 'node:crypto'
 import {
+  APIError,
   checkLoginPermission,
   getFieldsToSign,
   incrementLoginAttempts,
@@ -22,9 +24,77 @@ type BaseArgs = {
 
 type Args = BaseArgs & FindUserType
 
+/**
+ * TODO: Remove when Payload exports this function
+ */
+const removeExpiredSessions = (
+  sessions: { createdAt: Date | string; expiresAt: Date | string; id: string }[],
+) => {
+  const now = new Date()
+
+  return sessions.filter(({ expiresAt }) => {
+    const expiry = expiresAt instanceof Date ? expiresAt : new Date(expiresAt)
+    return expiry > now
+  })
+}
+
+/**
+ * TODO: Remove when Payload exports this function
+ */
+const addUserSession = async ({
+  collectionConfig,
+  payload,
+  req,
+  user,
+}: {
+  collectionConfig: SanitizedCollectionConfig
+  payload: Payload
+  req: PayloadRequest
+  user: TypedUser
+}): Promise<{ sid?: string }> => {
+  let sid: string | undefined
+  if (collectionConfig.auth.useSessions) {
+    // Add session to user
+    sid = randomUUID()
+    const now = new Date()
+    const tokenExpInMs = collectionConfig.auth.tokenExpiration * 1000
+    const expiresAt = new Date(now.getTime() + tokenExpInMs)
+
+    const session = { id: sid, createdAt: now, expiresAt }
+
+    if (!user.sessions?.length) {
+      user.sessions = [session]
+    } else {
+      user.sessions = removeExpiredSessions(user.sessions)
+      user.sessions.push(session)
+    }
+
+    await payload.db.updateOne({
+      id: user.id,
+      collection: collectionConfig.slug,
+      data: user,
+      req,
+      returning: false,
+    })
+
+    user.collection = collectionConfig.slug
+    user._strategy = 'local-jwt'
+  }
+
+  return {
+    sid,
+  }
+}
+
 export const loginWithOTP = async ({ type, collection, otp, req, value }: Args) => {
   const { context, payload } = req
   const collectionConfig = payload.collections[collection].config
+
+  if (!collectionConfig.auth) {
+    throw new APIError(
+      `The collection "${collection}" must be an auth collection to use loginWithOTP.`,
+    )
+  }
 
   const matchedUser = await findUser({
     type,
@@ -65,7 +135,6 @@ export const loginWithOTP = async ({ type, collection, otp, req, value }: Args) 
   const { canLoginWithUsername } = getLoginOptions(collectionConfig.auth?.loginWithUsername)
 
   checkLoginPermission({
-    collection: collectionConfig,
     loggingInWithUsername: Boolean(canLoginWithUsername && type === 'username'),
     req,
     user,
@@ -83,10 +152,27 @@ export const loginWithOTP = async ({ type, collection, otp, req, value }: Args) 
     }
   }
 
+  const fieldsToSignArgs: Parameters<typeof getFieldsToSign>[0] = {
+    collectionConfig,
+    email: user.email!,
+    user,
+  }
+
+  const { sid } = await addUserSession({
+    collectionConfig,
+    payload,
+    req,
+    user,
+  })
+
+  if (sid) {
+    fieldsToSignArgs.sid = sid
+  }
+
   req.user = user
 
   const { exp, token } = await jwtSign({
-    fieldsToSign: getFieldsToSign({ collectionConfig, email: user.emai || '', user }),
+    fieldsToSign: getFieldsToSign(fieldsToSignArgs),
     secret: payload.secret,
     tokenExpiration: collectionConfig.auth.tokenExpiration,
   })
