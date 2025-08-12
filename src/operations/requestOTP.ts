@@ -43,10 +43,21 @@ export const setOTP = async ({
   const _otpExpiration = new Date(Date.now() + exp * 1000).toISOString()
 
   try {
+    const userData = await payload.db.findOne({
+      collection,
+      joins: false,
+      where: { id: { equals: user.id } },
+    })
+
+    if (!userData) {
+      throw new APIError(`User with ID=${user.id} was not found.`)
+    }
+
     await payload.db.updateOne({
       id: user.id,
       collection,
       data: {
+        ...userData,
         _otp: encrypt({ payload, value: otp }),
         _otpExpiration,
       },
