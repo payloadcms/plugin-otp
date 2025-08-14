@@ -13,7 +13,7 @@ import {
   useConfig,
   useTranslation,
 } from '@payloadcms/ui'
-import { useRouter } from 'next/navigation.js'
+import { useRouter, useSearchParams } from 'next/navigation.js'
 import { email, username } from 'payload/shared'
 import React from 'react'
 
@@ -23,6 +23,7 @@ import { localStorageKey } from '../shared.js'
 const baseClass = 'request-otp'
 
 export const RequestOTP: React.FC<AdminViewClientProps> = () => {
+  const redirect = useSearchParams().get('redirect')
   const { config, getEntityConfig } = useConfig()
   const { t } = useTranslation()
   const router = useRouter()
@@ -50,10 +51,10 @@ export const RequestOTP: React.FC<AdminViewClientProps> = () => {
   const onSuccess = React.useCallback(
     (args: unknown) => {
       const { value } = args as { value: string }
-      router.push(`${admin}/otp/login`)
+      router.push(`${admin}/otp/login${redirect ? '?redirect=' + redirect : ''}`)
       window.localStorage.setItem(localStorageKey, value)
     },
-    [router, admin],
+    [router, admin, redirect],
   )
 
   return (
