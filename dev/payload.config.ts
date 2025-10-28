@@ -47,6 +47,9 @@ const buildConfigWithMemoryDB = async () => {
     },
     plugins: [
       pluginOTP({
+        admin: {
+          defaultToOTP: true,
+        },
         collections: {
           users: true,
         },

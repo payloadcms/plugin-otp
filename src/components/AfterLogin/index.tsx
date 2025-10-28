@@ -7,7 +7,11 @@ import './index.scss'
 
 const baseClass = 'after-login-otp'
 
-export const AfterLoginOTP: React.FC = () => {
+type AfterLoginOTPProps = {
+  defaultToOTP?: boolean
+}
+
+export const AfterLoginOTP: React.FC<AfterLoginOTPProps> = ({ defaultToOTP = false }) => {
   const {
     config: {
       routes: { admin },
@@ -16,7 +20,9 @@ export const AfterLoginOTP: React.FC = () => {
 
   return (
     <div className={baseClass}>
-      <Link href={`${admin}/otp/request`}>Request a one-time password</Link>
+      <Link href={`${admin}${defaultToOTP ? '/login' : '/otp/request'}`}>
+        Request a one-time password
+      </Link>
     </div>
   )
 }

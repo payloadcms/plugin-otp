@@ -110,9 +110,9 @@ export const loginWithOTP = async ({ type, collection, otp, req, value }: Args) 
     if (maxLoginAttemptsEnabled) {
       await incrementLoginAttempts({
         collection: collectionConfig,
-        doc: matchedUser,
         payload: req.payload,
         req,
+        user: matchedUser,
       })
     }
 

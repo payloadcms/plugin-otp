@@ -20,6 +20,7 @@ export const pluginOTP =
       if (!config.admin) {
         config.admin = {}
       }
+
       if (!config.admin.components) {
         config.admin.components = {}
       }
@@ -31,7 +32,12 @@ export const pluginOTP =
         config.admin.components.views = {}
       }
 
-      config.admin.components.afterLogin.push('@payloadcms/plugin-otp/client#AfterLoginOTP')
+      config.admin.components.afterLogin.push({
+        clientProps: {
+          defaultToOTP: typeof options.admin === 'object' && options.admin.defaultToOTP,
+        },
+        path: '@payloadcms/plugin-otp/client#AfterLoginOTP',
+      })
 
       config.admin.components.views.requestOTP = {
         Component: '@payloadcms/plugin-otp/client#RequestOTP',
@@ -43,12 +49,48 @@ export const pluginOTP =
       }
 
       config.admin.components.views.loginOTP = {
-        Component: '@payloadcms/plugin-otp/client#LoginOTP',
+        Component: {
+          clientProps: {
+            defaultToOTP: typeof options.admin === 'object' && options.admin.defaultToOTP,
+          },
+          path: '@payloadcms/plugin-otp/client#LoginOTP',
+        },
         exact: true,
         meta: {
           titleSuffix: ' - Login with one-time password',
         },
         path: '/otp/login',
+      }
+
+      // If defaultToOTP is enabled, replace the default login view with OTP login
+      if (typeof options.admin === 'object' && options.admin.defaultToOTP) {
+        config.admin.components.views.login = {
+          Component: {
+            clientProps: {
+              defaultToOTP: true,
+            },
+            path: '@payloadcms/plugin-otp/client#RequestOTP',
+          },
+          exact: true,
+          meta: {
+            titleSuffix: ' - Login with one-time password',
+          },
+          path: '/login',
+        }
+
+        config.admin.components.views.defaultLogin = {
+          Component: {
+            clientProps: {
+              defaultToOTP: true,
+            },
+            path: '@payloadcms/plugin-otp/client#DefaultLogin',
+          },
+          exact: true,
+          meta: {
+            titleSuffix: ' - Login',
+          },
+          path: '/login/default',
+        }
       }
     }
 

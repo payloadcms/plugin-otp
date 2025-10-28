@@ -22,7 +22,11 @@ import { localStorageKey } from '../shared.js'
 
 const baseClass = 'request-otp'
 
-export const RequestOTP: React.FC<AdminViewClientProps> = () => {
+type RequestOTPProps = {
+  defaultToOTP?: boolean
+} & AdminViewClientProps
+
+export const RequestOTP: React.FC<RequestOTPProps> = (props) => {
   const { config, getEntityConfig } = useConfig()
   const { t } = useTranslation()
   const router = useRouter()
@@ -31,6 +35,8 @@ export const RequestOTP: React.FC<AdminViewClientProps> = () => {
     admin: { user: userSlug },
     routes: { admin, api },
   } = config
+
+  const defaultToOTP = props?.defaultToOTP === true
 
   const collectionConfig = getEntityConfig({ collectionSlug: userSlug })
   const { auth: authOptions } = collectionConfig
@@ -118,7 +124,7 @@ export const RequestOTP: React.FC<AdminViewClientProps> = () => {
         )}
         <FormSubmit size="large">Request one-time password</FormSubmit>
       </Form>
-      <Link href={`${admin}/login`}>Back to login</Link>
+      <Link href={`${admin}/login${defaultToOTP ? '/default' : ''}`}>Back to login</Link>
     </MinimalTemplate>
   )
 }
