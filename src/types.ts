@@ -38,8 +38,20 @@ export type OTPPluginOptions = {
    * Set `admin: false` to disable any modifications to the Payload admin UI.
    * This is useful if you are using this plugin in your own frontends, but not
    * within the admin UI itself.
+   *
+   * Alternatively, pass an object with `defaultToOTP: true` to make OTP the default login method.
    */
-  admin?: false
+  admin?:
+    | {
+        /**
+         * When enabled, the default login page (/admin/login) will use OTP authentication.
+         * The standard email/password login will still be accessible at /admin/login/default.
+         *
+         * @default false
+         */
+        defaultToOTP?: boolean
+      }
+    | false
   /**
    * Define options for each auth-enabled collection you want to enable OTP for.
    */

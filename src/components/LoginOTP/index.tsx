@@ -20,7 +20,11 @@ import { localStorageKey } from '../shared.js'
 
 const baseClass = 'login-otp'
 
-export const LoginOTP: React.FC<AdminViewClientProps> = () => {
+type LoginOTPProps = {
+  defaultToOTP?: boolean
+} & AdminViewClientProps
+
+export const LoginOTP: React.FC<LoginOTPProps> = (props) => {
   const { config, getEntityConfig } = useConfig()
   const { t } = useTranslation()
   const router = useRouter()
@@ -29,6 +33,8 @@ export const LoginOTP: React.FC<AdminViewClientProps> = () => {
     admin: { user: userSlug },
     routes: { admin, api },
   } = config
+
+  const defaultToOTP = props?.defaultToOTP === true
 
   const collectionConfig = getEntityConfig({ collectionSlug: userSlug })
   const { auth: authOptions } = collectionConfig
@@ -102,7 +108,7 @@ export const LoginOTP: React.FC<AdminViewClientProps> = () => {
         />
         <FormSubmit size="large">Log in</FormSubmit>
       </Form>
-      <Link href={`${admin}/login`}>Back to login</Link>
+      <Link href={`${admin}/login${defaultToOTP ? '/default' : ''}`}>Back to login</Link>
     </MinimalTemplate>
   )
 }

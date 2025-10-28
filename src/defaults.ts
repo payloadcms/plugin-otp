@@ -15,9 +15,10 @@ export const defaultUserCollection: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
   },
-  auth: {
-    tokenExpiration: 7200,
-  },
+  auth: true,
+  // auth: {
+  //   tokenExpiration: 7200,
+  // },
   fields: [],
   labels: {
     plural: ({ t }) => t('general:users'),
