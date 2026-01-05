@@ -14,7 +14,7 @@ import {
   useTranslation,
 } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation.js'
-import { email, username } from 'payload/shared'
+import { email, formatAdminURL, username } from 'payload/shared'
 import React from 'react'
 
 import { getLoginOptions } from '../../utilities/getLoginOptions.js'
@@ -67,7 +67,10 @@ export const RequestOTP: React.FC<RequestOTPProps> = (props) => {
       <h3>Request a one-time password</h3>
       <br />
       <Form
-        action={`${api}/${userSlug}/otp/request`}
+        action={formatAdminURL({
+          apiRoute: api,
+          path: `/${userSlug}/otp/request`,
+        })}
         method="POST"
         onSuccess={onSuccess}
         waitForAutocomplete
