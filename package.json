@@ -1,6 +1,6 @@
 {
   "name": "@payloadcms/plugin-otp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A blank template to get started with Payload 3.0",
   "license": "MIT",
   "type": "module",
