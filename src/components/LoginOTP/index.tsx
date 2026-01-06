@@ -13,6 +13,7 @@ import {
   useTranslation,
 } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation.js'
+import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
 import { getLoginOptions } from '../../utilities/getLoginOptions.js'
@@ -72,7 +73,10 @@ export const LoginOTP: React.FC<LoginOTPProps> = (props) => {
       <h3>Log in with one-time password</h3>
       <br />
       <Form
-        action={`${api}/${userSlug}/otp/login`}
+        action={formatAdminURL({
+          apiRoute: api,
+          path: `/${userSlug}/otp/login`,
+        })}
         className={baseClass}
         initialState={initialState}
         method="POST"
