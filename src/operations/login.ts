@@ -200,10 +200,23 @@ export const loginWithOTP = async ({ type, collection, otp, req, value }: Args) 
     dataToUpdate.loginAttempts = 0
   }
 
+  const userData = await payload.db.findOne({
+    collection,
+    joins: false,
+    where: { id: { equals: user.id } },
+  })
+
+  if (!userData) {
+    throw new APIError(`User with ID=${user.id} was not found.`)
+  }
+
   await payload.db.updateOne({
     id: user.id,
     collection,
-    data: dataToUpdate,
+    data: {
+      ...userData,
+      dataToUpdate,
+    },
   })
 
   return { exp, token, user }
